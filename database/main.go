@@ -1,7 +1,11 @@
 package main
 
-import "bp_api/database/json_driver"
+import "bp_api/json_driver"
 
 func main() {
-	json_driver.Init()
+	db, ok := json_driver.Init()
+	if !ok {
+		panic("DB error")
+	}
+	db.Test()
 }

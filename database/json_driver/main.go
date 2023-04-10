@@ -1,36 +1,60 @@
 package json_driver
 
 import (
-	"bp_api/database/model"
-	"bp_api/database/util"
+	"bp_api/model"
+	"bp_api/util"
 	"github.com/asdine/storm/v3"
-	"time"
 )
 
-func Init() {
-	db, err := storm.Open("json_driver.db")
+type Database struct {
+	cl *storm.DB
+}
 
+func Init() (Database, bool) {
+	db, err := storm.Open("json_driver.db")
 	if err != nil {
-		panic(err)
+		return Database{}, false
 	}
-	logData := model.Log{
-		ID:        util.CreateUID(),
+	dbs := Database{cl: db}
+
+	dbs.cl = db
+
+	/*logData := model.Log{
+		ID:        "util.CreateUaID()",
 		Content:   "Database INIT. Successfully.",
 		CreatedAt: time.Now(),
-	}
-	err = db.Save(&logData)
-	if err != nil {
-		return
-	}
+	}*/
+
+	//err = db.Save(&logData)
+	/*if err != nil {
+		return dbs, false
+	}*/
 
 	defer func(db *storm.DB) {
 		err := db.Close()
 		if err != nil {
-			panic(err)
+			return
 		}
 	}(db)
+	return dbs, true
 }
 
-func CreateUser() (data, bool) {
+func (dbs *Database) CreateUser(user model.User) (model.User, bool) {
+	ok := util.CheckString(user.ID)
+	if !ok {
+		user.CreateID()
+	}
 
+	user.SetCreationTime()
+	user.SetUpdateTime()
+
+	err := dbs.cl.Save(&user)
+	if err != nil {
+		return user, false
+	}
+	return user, true
+}
+
+func (dbs *Database) Test() {
+	println("Db tested.")
 }
